@@ -156,6 +156,8 @@ architecture rtl of top is
   signal dir_blue            : std_logic_vector(7 downto 0);
   signal dir_pixel_column    : std_logic_vector(10 downto 0);
   signal dir_pixel_row       : std_logic_vector(10 downto 0);
+  
+  signal cnt :std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
 
 begin
 
@@ -250,11 +252,79 @@ begin
   --dir_red
   --dir_green
   --dir_blue
+	dir_red <= 	x"ff" when dir_pixel_column < (H_RES/8)*1 else
+					x"00" when dir_pixel_column < (H_RES/8)*2 else
+					x"00" when dir_pixel_column < (H_RES/8)*3 else
+					x"ff" when dir_pixel_column < (H_RES/8)*4 else
+					x"aa" when dir_pixel_column < (H_RES/8)*5 else
+					x"44" when dir_pixel_column < (H_RES/8)*6 else
+					x"11" when dir_pixel_column < (H_RES/8)*7 else
+					x"3c";				
+					
+	dir_green <=	x"00" when dir_pixel_column < (H_RES/8)*1 else
+						x"ff" when dir_pixel_column < (H_RES/8)*2 else
+						x"00" when dir_pixel_column < (H_RES/8)*3 else
+						x"ff" when dir_pixel_column < (H_RES/8)*4 else
+						x"aa" when dir_pixel_column < (H_RES/8)*5 else
+						x"33" when dir_pixel_column < (H_RES/8)*6 else
+						x"22" when dir_pixel_column < (H_RES/8)*7 else
+						x"3a";
+						
+	dir_blue <=	x"00" when dir_pixel_column < (H_RES/8)*1 else
+					x"00" when dir_pixel_column < (H_RES/8)*2 else
+					x"ff" when dir_pixel_column < (H_RES/8)*3 else
+					x"ff" when dir_pixel_column < (H_RES/8)*4 else
+					x"aa" when dir_pixel_column < (H_RES/8)*5 else
+					x"22" when dir_pixel_column < (H_RES/8)*6 else
+					x"33" when dir_pixel_column < (H_RES/8)*7 else
+					x"3b";
+	
  
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
   --char_address
   --char_value
   --char_we
+	process(pix_clock_s,vga_rst_n_s)begin
+		if(char_we='1')then
+			if(vga_rst_n_s = '1') then
+				cnt <= "00000000000000";
+			elsif(pix_clock_s'event and pix_clock_s = '1') then
+				cnt <= cnt+1;
+			end if;
+		end if;
+	end process;
+	
+	with cnt select char_address <=
+					"00000000000001" when "00000000000001",
+					"00000000000010" when "00000000000010",
+					"00000000000011" when "00000000000011",
+					"00000000000100" when "00000000000100",
+					"00000000000101" when "00000000000101",
+					"00000000000110" when "00000000000110",
+					"00000000000111" when "00000000000111",
+					"00000000001000" when "00000000001000",
+					"00000000001001" when "00000000001001",
+					"00000000001010" when "00000000001010",
+					"00000000001011" when "00000000001011",
+					"00000000001100" when "00000000001100",
+					"00000000001101" when "00000000001101",
+					"00000000001110" when "00000000001110",
+					"00000000001111" when "00000000001111",
+					"00000000010000" when "00000000010000",
+					"00000000010001" when "00000000010001",
+					"00000000010010" when "00000000010010",
+					"00000000010011" when "00000000010011",
+					"00000000010100" when "00000000010100",
+					"00000000010101" when "00000000010101",
+					"00000000010110" when "00000000010110",
+					"00000000010111" when "00000000010111",
+					"00000000011000" when "00000000011000",
+					"00000000011001" when "00000000011001",
+					"00000000011010" when "00000000011010",
+					"00000000011111" when others;
+					
+					
+		
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
