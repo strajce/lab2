@@ -32,7 +32,9 @@ entity top is
     sync_o         : out std_logic;
     red_o          : out std_logic_vector(7 downto 0);
     green_o        : out std_logic_vector(7 downto 0);
-    blue_o         : out std_logic_vector(7 downto 0)
+    blue_o         : out std_logic_vector(7 downto 0);
+	 direct_mode_i  : in std_logic;
+	 display_mode_i : in std_logic_vector(1 downto 0)
    );
 end top;
 
@@ -159,6 +161,7 @@ architecture rtl of top is
   
   signal cnt :std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
 
+
 begin
 
   -- calculate message lenght from font size
@@ -170,11 +173,11 @@ begin
   graphics_lenght <= conv_std_logic_vector(MEM_SIZE*8*8, GRAPH_MEM_ADDR_WIDTH);
   
   -- removed to inputs pin
-  direct_mode <= '1';
-  display_mode     <= "10";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+  --direct_mode <= '0';
+  --display_mode     <= "11";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
   
   font_size        <= x"1";
-  show_frame       <= '1';
+  show_frame       <= '0';
   foreground_color <= x"FFFFFF";
   background_color <= x"000000";
   frame_color      <= x"FF0000";
@@ -284,52 +287,62 @@ begin
   --char_address
   --char_value
   --char_we
+	char_we <= '1';
+	
 	process(pix_clock_s,vga_rst_n_s)begin
-		if(char_we='1')then
-			if(vga_rst_n_s = '1') then
+			if(vga_rst_n_s = '1' and cnt = 4800) then
 				cnt <= "00000000000000";
 			elsif(pix_clock_s'event and pix_clock_s = '1') then
 				cnt <= cnt+1;
 			end if;
-		end if;
 	end process;
 	
-	with cnt select char_address <=
-					"00000000000001" when "00000000000001",
-					"00000000000010" when "00000000000010",
-					"00000000000011" when "00000000000011",
-					"00000000000100" when "00000000000100",
-					"00000000000101" when "00000000000101",
-					"00000000000110" when "00000000000110",
-					"00000000000111" when "00000000000111",
-					"00000000001000" when "00000000001000",
-					"00000000001001" when "00000000001001",
-					"00000000001010" when "00000000001010",
-					"00000000001011" when "00000000001011",
-					"00000000001100" when "00000000001100",
-					"00000000001101" when "00000000001101",
-					"00000000001110" when "00000000001110",
-					"00000000001111" when "00000000001111",
-					"00000000010000" when "00000000010000",
-					"00000000010001" when "00000000010001",
-					"00000000010010" when "00000000010010",
-					"00000000010011" when "00000000010011",
-					"00000000010100" when "00000000010100",
-					"00000000010101" when "00000000010101",
-					"00000000010110" when "00000000010110",
-					"00000000010111" when "00000000010111",
-					"00000000011000" when "00000000011000",
-					"00000000011001" when "00000000011001",
-					"00000000011010" when "00000000011010",
-					"00000000011111" when others;
-					
-					
-		
+	char_address <= cnt;
+	
+	char_value <= 	"000001" when cnt = 0 else
+						"000010" when cnt = 1 else
+						"000011" when cnt = 2 else
+						"000100" when cnt = 3 else
+						"000101" when cnt = 4 else
+						"000110" when cnt = 5 else
+						"000111" when cnt = 6 else
+						"001000" when cnt = 7 else
+						"001001" when cnt = 8 else
+						"001010" when cnt = 9 else
+						"001011" when cnt = 10 else
+						"001100" when cnt = 11 else
+						"001101" when cnt = 12 else
+						"001110" when cnt = 13 else
+						"001111" when cnt = 14 else
+						"010000" when cnt = 15 else
+						"010001" when cnt = 16 else
+						"010010" when cnt = 17 else
+						"010011" when cnt = 18 else
+						"010100" when cnt = 19 else
+						"010101" when cnt = 20 else
+						"010110" when cnt = 21 else
+						"010111" when cnt = 22 else
+						"011000" when cnt = 23 else
+						"011001" when cnt = 24 else
+						"011010" when cnt = 25 else
+						"100000";
+	
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
   --pixel_value
   --pixel_we
+  process(dircet_mode_i,display_mode_i)begin
+		if(direct_mode_i = '0')then
+			if(SW0='1' and SW1='0')then
+					display_mode_i<="01";
+			elsif(SW0='0' and SW1='1')then
+					display_mode_i<="11";
+			elsif(SW0='1' and SW1='1')then
+					display_mode_i<="11";
+			end if;
+		end if;
+	end process;
   
   
 end rtl;
